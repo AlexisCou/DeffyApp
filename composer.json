@@ -1,0 +1,18 @@
+{
+    "name": "acout/deffyapp",
+    "description": "Application web DeefyApp",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexis Cou",
+            "email": "alexis.couturier9@etu.univ-lorraine.fr"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "iutnc\\deefy\\": "./"
+        }
+    },
+    "require": {}
+}
