@@ -1,11 +1,15 @@
 <?php
-
 namespace iutnc\deefy\dispatch;
 
-use iutnc\deefy\action\{DefaultAction, DisplayPlaylistAction, AddPlaylistAction, AddPodcastTrackAction};
+use iutnc\deefy\action\{
+    DefaultAction,
+    DisplayPlaylistAction,
+    AddPlaylistAction,
+    AddPodcastTrackAction,
+    AddUserAction
+};
 
 class Dispatcher {
-
     private string $action;
 
     public function __construct() {
@@ -13,8 +17,6 @@ class Dispatcher {
     }
 
     public function run(): void {
-        $html = '';
-
         switch ($this->action) {
             case 'playlist':
                 $action = new DisplayPlaylistAction();
@@ -24,6 +26,9 @@ class Dispatcher {
                 break;
             case 'add-track':
                 $action = new AddPodcastTrackAction();
+                break;
+            case 'add-user':
+                $action = new AddUserAction();
                 break;
             default:
                 $action = new DefaultAction();
@@ -48,7 +53,8 @@ class Dispatcher {
                 <a href="?action=default">Accueil</a> |
                 <a href="?action=playlist">Voir Playlist</a> |
                 <a href="?action=add-playlist">Créer Playlist</a> |
-                <a href="?action=add-track">Ajouter Track</a>
+                <a href="?action=add-track">Ajouter Track</a> |
+                <a href="?action=add-user">Inscription</a>
             </nav>
             <hr>
             $html
@@ -57,3 +63,4 @@ class Dispatcher {
         HTML;
     }
 }
+
