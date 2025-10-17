@@ -4,6 +4,12 @@ namespace iutnc\deefy\classes;
 
 class Playlist extends AudioList {
 
+    private ?int $id = null;
+
+    public function setId(int $id): void {
+        $this->id = $id;
+    }
+
     public function addTrack(AudioTrack $track): void {
         $this->tracks[] = $track;
         $this->nbTracks = count($this->tracks);
