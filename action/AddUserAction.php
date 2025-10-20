@@ -1,27 +1,66 @@
 <?php
+declare(strict_types=1);
+
 namespace iutnc\deefy\action;
 
+use iutnc\deefy\auth\AuthnProvider;
+use iutnc\deefy\auth\AuthnException;
+
 class AddUserAction extends Action {
+
     public function execute(): string {
-        if ($this->http_method === 'POST') {
-            $nom = filter_var($_POST['nom'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
-            $age = filter_var($_POST['age'] ?? '', FILTER_SANITIZE_NUMBER_INT);
 
-            return <<<HTML
-            <p>Nom : $nom</p>
-            <p>Email : $email</p>
-            <p>Âge : {$age} ans</p>
-            HTML;
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            
+            $html = '<h2>Inscription</h2>
+            <form method="POST">
+                <p>
+                    <label for="email">Email :</label>
+                    <input type="email" name="email" id="email" required>
+                </p>
+                <p>
+                    <label for="passwd">Mot de passe (10 caractères min.) :</label>
+                    <input type="password" name="passwd" id="passwd" required>
+                </p>
+                <p>
+                    <label for="passwd_confirm">Confirmer le mot de passe :</label>
+                    <input type="password" name="passwd_confirm" id="passwd_confirm" required>
+                </p>
+                <p>
+                    <button type="submit">S\'inscrire</button>
+                </p>
+            </form>';
+            
+            return $html;
+
+        } else {
+
+            $email = $_POST['email'] ?? '';
+            $passwd = $_POST['passwd'] ?? '';
+            $passwd_confirm = $_POST['passwd_confirm'] ?? '';
+
+            if ($passwd !== $passwd_confirm) {
+                return "<h2>Erreur d'inscription</h2>
+                        <p>Les deux mots de passe ne correspondent pas.</p>
+                        <p><a href='?action=add-user'>Réessayer</a></p>";
+            }
+
+            try {
+                AuthnProvider::register($email, $passwd);
+                
+                $html = "<h2>Inscription réussie !</h2>
+                         <p>Votre compte a été créé. Vous pouvez maintenant vous connecter.</p>
+                         <p><a href='?action=signin'>Se connecter</a></p>";
+                
+                return $html;
+
+            } catch (AuthnException $e) {
+                $html = "<h2>Échec de l'inscription</h2>
+                         <p>" . $e->getMessage() . "</p>
+                         <p><a href='?action=add-user'>Réessayer</a></p>";
+                
+                return $html;
+            }
         }
-
-        return <<<HTML
-        <form method="post" action="?action=add-user">
-            <label>Nom : <input type="text" name="nom" required></label><br>
-            <label>Email : <input type="email" name="email" required></label><br>
-            <label>Âge : <input type="number" name="age" min="0" required></label><br>
-            <button type="submit">S'inscrire</button>
-        </form>
-        HTML;
     }
 }

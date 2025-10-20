@@ -1,5 +1,5 @@
 <?php
-
+/*
 require_once 'vendor/autoload.php';
 session_start();
 
@@ -15,7 +15,7 @@ use iutnc\deefy\classes\AudioTrack;
  * $dispatcher = new Dispatcher();
  * $dispatcher->run();
  * =================================================================
- */
+ 
 
 // =================================================================
 // CODE DE TEST POUR L'EXERCICE 3
@@ -92,3 +92,13 @@ try {
 } catch (Exception $e) {
     echo "<p style='color:red;'>Erreur lors de l'ajout de la piste à la playlist : " . $e->getMessage() . "</p>";
 }
+*/
+require_once 'vendor/autoload.php';
+session_start();
+
+// On importe la classe Dispatcher
+use iutnc\deefy\dispatch\Dispatcher;
+
+// On crée le Dispatcher et on le lance
+$dispatcher = new Dispatcher();
+$dispatcher->run();

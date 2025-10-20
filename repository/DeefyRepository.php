@@ -49,6 +49,17 @@ class DeefyRepository {
         ];
     }
 
+    public function findUserByEmail(string $email) : array | false {
+        $query = "SELECT email, passwd FROM User WHERE email = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        return $user;
+
+
+    }
+
     public function findAllPlaylists(): array {
         $query = "SELECT id, nom FROM playlist";
         $stmt = $this->db->query($query);
@@ -88,6 +99,14 @@ class DeefyRepository {
         $stmt->bindValue(2, $id_track);
         $stmt->bindValue(3, $id_playlist);
 
+        return $stmt->execute();
+    }
+
+    public function saveUser(string $email, string $hashed_password): bool {
+        $query = "INSERT INTO User (email, passwd, role) VALUES (?, ?, 1)";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(1, $email);
+        $stmt->bindValue(2, $hashed_password);
         return $stmt->execute();
     }
 }
