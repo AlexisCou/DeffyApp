@@ -6,7 +6,8 @@ use iutnc\deefy\action\{
     DisplayPlaylistAction,
     AddPlaylistAction,
     AddPodcastTrackAction,
-    AddUserAction
+    AddUserAction,
+    SigninAction
 };
 
 class Dispatcher {
@@ -29,6 +30,9 @@ class Dispatcher {
                 break;
             case 'add-user':
                 $action = new AddUserAction();
+                break;
+            case 'signin':
+                $action = new SigninAction();
                 break;
             default:
                 $action = new DefaultAction();
