@@ -5,7 +5,7 @@ namespace iutnc\deefy\classes;
 
 class PodcastTrack extends AudioTrack
 {
-    private string $auteur;
+    protected string $auteur;
     protected int $duration = 0; // cohérent avec AudioTrack
 
     public function __construct(string $title, string $fileName, string $auteur){
@@ -18,9 +18,14 @@ class PodcastTrack extends AudioTrack
     }
 
     public function __get(string $name): mixed {
-        if (!property_exists($this, $name)) {
+        try {
+            return parent::__get($name);
+        } catch (\Exception $e) {
+            if (property_exists($this, $name)) {
+                return $this->$name;
+            }
             throw new \Exception("invalid property : $name");
         }
-        return $this->$name;
     }
+
 }

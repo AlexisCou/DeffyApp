@@ -18,7 +18,6 @@ services:
       - .:/var/www/html
   db:
     image: mysql:8.0
-    container_name: mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -33,7 +32,7 @@ services:
     image: phpmyadmin:latest
     restart: always
     ports:
-      - "8081:80"
+      - "8000:80"
     environment:
       PMA_HOST: db
       PMA_USER: root
@@ -43,3 +42,4 @@ services:
 
 volumes:
   db_data:
+  

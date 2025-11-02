@@ -24,12 +24,19 @@ class AuthnProvider {
         }
 
         unset($user['passwd']); 
-        $_SESSION['user'] = $user;
+        $_SESSION['user'] = [
+            'id' => $user['id'],
+            'email' => $user['email'],
+            'role' => $user['role']
+        ];
+
     }
 
 
 
     public static function register(string $email, string $pass): void {
+        
+
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new AuthnException("Inscription échouée : l'email est invalide.");
         }

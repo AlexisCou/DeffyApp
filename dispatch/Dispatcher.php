@@ -7,7 +7,8 @@ use iutnc\deefy\action\{
     AddPlaylistAction,
     AddPodcastTrackAction,
     AddUserAction,
-    SigninAction
+    SigninAction,
+    PlayAudioAction
 };
 
 class Dispatcher {
@@ -34,6 +35,9 @@ class Dispatcher {
             case 'signin':
                 $action = new SigninAction();
                 break;
+            case 'play':
+                $action = new PlayAudioAction();
+                break;
             default:
                 $action = new DefaultAction();
                 break;
@@ -58,7 +62,8 @@ class Dispatcher {
                 <a href="?action=playlist">Voir Playlist</a> |
                 <a href="?action=add-playlist">Créer Playlist</a> |
                 <a href="?action=add-track">Ajouter Track</a> |
-                <a href="?action=add-user">Inscription</a>
+                <a href="?action=add-user">Inscription</a> |
+                <a href="?action=signin">Connexion</a> |
             </nav>
             <hr>
             $html

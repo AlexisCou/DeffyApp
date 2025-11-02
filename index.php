@@ -98,7 +98,13 @@ session_start();
 
 // On importe la classe Dispatcher
 use iutnc\deefy\dispatch\Dispatcher;
+use iutnc\deefy\repository\DeefyRepository;
+
+DeefyRepository::setConfig('db.config.ini');
+$repo = DeefyRepository::getInstance();
+$repo->initializeAudioTables();
 
 // On crée le Dispatcher et on le lance
 $dispatcher = new Dispatcher();
 $dispatcher->run();
+
