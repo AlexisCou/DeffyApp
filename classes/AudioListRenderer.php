@@ -16,18 +16,35 @@ class AudioListRenderer {
             try {
                 $title = $track->__get('title');
                 $duration = $track->__get('duration');
-            } catch (Exception $e) {
+                $filePath = $track->__get('fileName');
+                $author = '(auteur inconnu)';
+                
+                if ($track instanceof PodcastTrack) {
+                    $author = $track->__get('auteur');
+                }
+
+            } catch (\Exception $e) {
                 $title = "(titre inconnu)";
                 $duration = 0;
+                $filePath = '';
+                $author = '(erreur)';
             }
+            
+            echo "<li>";
+            if (!empty($filePath)) {
+                echo "<p><strong>{$title}</strong></p>";
+                echo "<audio controls src='{$filePath}' style='width: 100%; max-width: 400px;'></audio>";
+                
+                if ($track instanceof PodcastTrack) {
+                    echo "<p style='margin-top: 5px; font-size: 0.9em;'>Podcast: {$author} ({$duration}s)</p>";
+                } else {
+                     echo "<p style='margin-top: 5px; font-size: 0.9em;'>Durée: {$duration}s</p>";
+                }
 
-            if ($track instanceof AlbumTrack) {
-                echo "<li>" . $title . " - Album: " . $track->__get('album') . " (" . $duration . "s)</li>";
-            } elseif ($track instanceof PodcastTrack) {
-                echo "<li>" . $title . " - Podcast: " . $track->__get('auteur') . " (" . $duration . "s)</li>";
             } else {
-                echo "<li>" . $title . " (" . $duration . "s)</li>";
+                echo "{$title} (Piste introuvable)";
             }
+            echo "</li><br>";
         }
         echo "</ul>";
         echo "<strong>Nombre de pistes :</strong> " . $this->audioList->nbTracks . "<br>";

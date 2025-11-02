@@ -53,7 +53,10 @@ echo "<hr>";
 echo "<h2>2. Ajout d'une nouvelle playlist :</h2>";
 try {
     $nouvellePlaylist = new Playlist("Ma Playlist de l'IUT");
-    if ($repo->savePlaylist($nouvellePlaylist)) {
+    // On suppose que savePlaylist a été modifiée pour prendre un $userId (ex: 1 pour le test)
+    // Pour que le test fonctionne avec le nouveau Repo, il faut adapter cet appel :
+    // if ($repo->savePlaylist($nouvellePlaylist, 1)) { 
+    if ($repo->savePlaylist($nouvellePlaylist)) { // Garde l'ancien appel pour ton test
         echo "<p style='color:green;'>La playlist '{$nouvellePlaylist->__get('name')}' a bien été ajoutée !</p>";
     } else {
         echo "<p style='color:red;'>Échec de l'ajout de la playlist.</p>";
@@ -93,11 +96,26 @@ try {
     echo "<p style='color:red;'>Erreur lors de l'ajout de la piste à la playlist : " . $e->getMessage() . "</p>";
 }
 */
+
+// =================================================================
+// CODE DE PRODUCTION (MODIFIÉ)
+// =================================================================
+
 require_once 'vendor/autoload.php';
 session_start();
 
-// On importe la classe Dispatcher
+// On importe les classes Dispatcher ET Repository
 use iutnc\deefy\dispatch\Dispatcher;
+use iutnc\deefy\repository\DeefyRepository; // <-- 1. AJOUTÉ
+
+try {
+    // 2. AJOUTÉ : On charge la configuration AVANT tout le reste
+    DeefyRepository::setConfig('db.config.ini');
+
+} catch (\Exception $e) {
+    // Si la config échoue, on arrête tout
+    die("<h2>Erreur de configuration</h2><p>Impossible de charger la configuration de la base de données : " . $e->getMessage() . "</p>");
+}
 
 // On crée le Dispatcher et on le lance
 $dispatcher = new Dispatcher();
