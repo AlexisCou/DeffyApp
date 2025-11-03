@@ -107,7 +107,6 @@ class DeefyRepository {
 
         $tracks = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            // On choisit la bonne classe selon le type de track
             if ($row['type'] === 'P') {
                 $track = new \iutnc\deefy\classes\PodcastTrack(
                     $row['titre'],
@@ -119,7 +118,6 @@ class DeefyRepository {
                     $row['titre'],
                     $row['filename']
                 );
-                // ✅ on évite le TypeError ici
                 $track->setArtist($row['artiste_album'] ?? '');
                 $track->setDuration((int)$row['duree']);
             }
@@ -159,9 +157,8 @@ class DeefyRepository {
         $query = "INSERT INTO track (titre, artiste_album, duree, filename) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(1, $track->__get('title'));
-        $stmt->bindValue(2, $track->__get('artist') ?? ''); // artiste_album
-        $stmt->bindValue(3, $track->getDuration());        // utilise le getter public
-        //echo "<script>console.log('Message PHP : " . $track->getDuration() . "');</script>";
+        $stmt->bindValue(2, $track->__get('artist') ?? '');
+        $stmt->bindValue(3, $track->getDuration());
         $stmt->bindValue(4, $track->__get('fileName'));
         return $stmt->execute();
     }

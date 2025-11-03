@@ -4,19 +4,6 @@ namespace iutnc\deefy\action;
 use iutnc\deefy\classes\AudioListRenderer;
 use iutnc\deefy\repository\DeefyRepository;
 
-/*class DisplayPlaylistAction extends Action {
-    public function execute(): string {
-        if (!isset($_SESSION['playlist'])) {
-            return "<p>Aucune playlist disponible. Ajoutez-en une d'abord.</p>";
-        }
-
-        $playlist = $_SESSION['playlist'];
-        $renderer = new AudioListRenderer($playlist);
-        ob_start();
-        $renderer->render();
-        return ob_get_clean();
-    }
-}*/
 class DisplayPlaylistAction extends Action {
     public function execute(): string {
         if (!isset($_SESSION['user'])) {
@@ -34,20 +21,17 @@ class DisplayPlaylistAction extends Action {
         $html = "<h2>Vos Playlists</h2><hr>";
 
         foreach ($playlists as $playlist) {
-            // Récupérer les pistes de la playlist
+
             $tracks = $repo->findTracksByPlaylist($playlist->__get('id'));
             $playlist->addTracks($tracks);
 
-            // Construction du HTML des pistes
             $tracksHTML = "<ul style='margin-left:20px;'>";
             if (empty($tracks)) {
                 $tracksHTML .= "<li><em>Aucune piste dans cette playlist.</em></li>";
             } else {
                 foreach ($tracks as $t) {
-                    // Récupère l'id_audio associé à ce track
                     $audioId = $repo->findAudioIdByTrack($t->__get('id'));
 
-                    // Si l'audio existe, on crée un lecteur HTML relié à l'action PlayAudioAction
                     $audioPlayer = $audioId
                         ? "<audio controls style='margin-top:5px;' src='?action=play&id_audio={$audioId}'></audio>"
                         : "<em>(Pas de fichier audio)</em>";
@@ -62,7 +46,6 @@ class DisplayPlaylistAction extends Action {
             }
             $tracksHTML .= "</ul>";
 
-            // Bloc HTML de la playlist complète
             $html .= <<<HTML
                 <div style="border:1px solid #bbb; padding:10px; margin:15px 0; border-radius:6px;">
                     <h3 style="margin-bottom:10px;">{$playlist->__get('name')}</h3>

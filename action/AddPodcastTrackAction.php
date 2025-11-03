@@ -18,13 +18,11 @@ class AddPodcastTrackAction extends Action
         $repo = DeefyRepository::getInstance();
         $playlists = $repo->findAllPlaylistsByUser($_SESSION['user']['id']);
 
-        // Si l'utilisateur n'a aucune playlist
         if (empty($playlists)) {
             return "<p>Vous devez d'abord créer une playlist avant d'ajouter une piste.</p>
                     <p><a href='?action=add-playlist'>Créer une playlist</a></p>";
         }
 
-        // --- FORMULAIRE (GET)
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $options = '';
             foreach ($playlists as $pl) {
@@ -56,7 +54,6 @@ class AddPodcastTrackAction extends Action
             HTML;
         }
 
-        // --- TRAITEMENT DU FORMULAIRE (POST)
         $title = trim($_POST['title'] ?? '');
         $author = trim($_POST['author'] ?? '');
         $duration = (int)($_POST['duration'] ?? 0);
@@ -74,30 +71,15 @@ class AddPodcastTrackAction extends Action
             return "<p>Erreur : seuls les fichiers .mp3 sont acceptés.</p>";
         }
 
-        // Lecture du contenu binaire du MP3
         $data = file_get_contents($_FILES['userfile']['tmp_name']);
         $fileName = basename($name);
-
-        // Enregistrement du MP3 dans la table audio_file
         $audioId = $repo->saveAudioFile($fileName, $type, $data);
-
-        // Création de la track
         $track = new PodcastTrack($title, $fileName, $author);
         $track->setDuration($duration);
-
-        // 🔹 Ici on remplit artiste_album avec l'auteur saisi
         $track->setArtist($author);
-
-        // Sauvegarde de la track
         $repo->saveTrack($track);
-
-        // Récupération de l'ID de la track
         $trackId = $repo->getLastInsertId();
-
-        // Lien track <-> audio_file
         $repo->linkTrackToAudio($trackId, $audioId);
-
-        // Lien track <-> playlist
         $repo->addTrackToPlaylist($playlistId, $trackId);
 
         return <<<HTML
