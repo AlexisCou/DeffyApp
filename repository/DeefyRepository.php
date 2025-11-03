@@ -49,16 +49,6 @@ class DeefyRepository {
         ];
     }
 
-    /*public function findUserByEmail(string $email) : array | false {
-        $query = "SELECT email, passwd FROM User WHERE email = ?";
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-
-        return $user;
-    }*/
-
-
     public function findUserByEmail(string $email): array|false {
         $query = "SELECT id, email, passwd, role FROM User WHERE email = ?";
         $stmt = $this->db->prepare($query);
@@ -116,7 +106,7 @@ class DeefyRepository {
         $stmt->execute([$playlist_id]);
 
         $tracks = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             // On choisit la bonne classe selon le type de track
             if ($row['type'] === 'P') {
                 $track = new \iutnc\deefy\classes\PodcastTrack(
@@ -129,10 +119,11 @@ class DeefyRepository {
                     $row['titre'],
                     $row['filename']
                 );
-                
-                $track->setArtist($row['artiste_album']);
+                // ✅ on évite le TypeError ici
+                $track->setArtist($row['artiste_album'] ?? '');
                 $track->setDuration((int)$row['duree']);
             }
+
             $track->setId((int)$row['id']);
             $tracks[] = $track;
         }
@@ -141,28 +132,16 @@ class DeefyRepository {
     }
 
 
-
-    /*public function savePlaylist(Playlist $playlist): bool {
-        $query = "INSERT INTO playlist (nom) VALUES (?)";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(1, $playlist->__get('name'));
-        return $stmt->execute();
-    }*/
-
-
-
     public function savePlaylist(Playlist $playlist, int $user_id): bool {
         try {
-            // 1️⃣ Créer la playlist
+
             $query = "INSERT INTO playlist (nom) VALUES (?)";
             $stmt = $this->db->prepare($query);
             $stmt->bindValue(1, $playlist->__get('name'));
             $stmt->execute();
 
-            // 2️⃣ Récupérer l'ID de la playlist nouvellement créée
             $playlist_id = (int) $this->db->lastInsertId();
 
-            // 3️⃣ Lier la playlist à l'utilisateur connecté
             $linkQuery = "INSERT INTO user2playlist (id_user, id_pl) VALUES (?, ?)";
             $stmt2 = $this->db->prepare($linkQuery);
             $stmt2->execute([$user_id, $playlist_id]);
@@ -177,22 +156,16 @@ class DeefyRepository {
 
 
     public function saveTrack(AudioTrack $track): bool {
-        $query = "INSERT INTO track (titre, artiste_album, duree, filename, type) VALUES (?, ?, ?, ?, 'A')";
+        $query = "INSERT INTO track (titre, artiste_album, duree, filename) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(1, $track->__get('title'));
-        $stmt->bindValue(2, $track->__get('artist'));
-        $stmt->bindValue(3, $track->__get('duration'));
+        $stmt->bindValue(2, $track->__get('artist') ?? ''); // artiste_album
+        $stmt->bindValue(3, $track->getDuration());        // utilise le getter public
+        //echo "<script>console.log('Message PHP : " . $track->getDuration() . "');</script>";
         $stmt->bindValue(4, $track->__get('fileName'));
-
-        $result = $stmt->execute();
-
-        if ($result) {
-            // ✅ On récupère l'id auto-généré et on le met dans l'objet
-            $track->setId((int)$this->db->lastInsertId());
-        }
-
-        return $result;
+        return $stmt->execute();
     }
+
 
     public function addTrackToPlaylist(int $id_playlist, int $id_track): bool {
         $query = "INSERT INTO playlist2track (id_pl, id_track, no_piste_dans_liste)
@@ -223,7 +196,6 @@ class DeefyRepository {
     public function initializeAudioTables(): void {
         $queries = [
 
-            // Table qui contient les fichiers MP3 eux-mêmes
             "CREATE TABLE IF NOT EXISTS audio_file (
                 id_audio INT PRIMARY KEY AUTO_INCREMENT,
                 filename VARCHAR(255) NOT NULL,
@@ -231,7 +203,6 @@ class DeefyRepository {
                 mime_type VARCHAR(50) DEFAULT 'audio/mpeg'
             )",
 
-            // Table de liaison entre track et audio_file
             "CREATE TABLE IF NOT EXISTS track_audio (
                 id_track INT NOT NULL,
                 id_audio INT NOT NULL,
@@ -246,7 +217,6 @@ class DeefyRepository {
         }
     }
 
-    // Enregistre le MP3 dans audio_file et renvoie son ID
     public function saveAudioFile(string $filename, string $mime, string $data): int {
         $stmt = $this->db->prepare("INSERT INTO audio_file (filename, mime_type, data) VALUES (?, ?, ?)");
         $stmt->bindParam(1, $filename);
@@ -256,7 +226,6 @@ class DeefyRepository {
         return (int)$this->db->lastInsertId();
     }
 
-    // Lie une track à un audio_file
     public function linkTrackToAudio(int $trackId, int $audioId): bool {
         $stmt = $this->db->prepare("INSERT INTO track_audio (id_track, id_audio) VALUES (?, ?)");
         return $stmt->execute([$trackId, $audioId]);
@@ -276,7 +245,4 @@ class DeefyRepository {
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? (int)$row['id_audio'] : null;
     }
-
-
-
 }
