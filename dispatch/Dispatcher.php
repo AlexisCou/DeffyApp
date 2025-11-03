@@ -8,8 +8,8 @@ use iutnc\deefy\action\{
     AddPodcastTrackAction,
     AddUserAction,
     SigninAction,
-    DisplayMyPlaylistsAction,
-    SignoutAction
+    PlayAudioAction,
+    LogoutAction
 };
 
 class Dispatcher {
@@ -36,15 +36,12 @@ class Dispatcher {
             case 'signin':
                 $action = new SigninAction();
                 break;
-            
-            case 'my-playlists':
-                $action = new DisplayMyPlaylistsAction();
+            case 'play':
+                $action = new PlayAudioAction();
                 break;
-
-            case 'signout':
-                $action = new SignoutAction();
+            case 'logout':
+                $action = new LogoutAction();
                 break;
-
             default:
                 $action = new DefaultAction();
                 break;
@@ -55,15 +52,32 @@ class Dispatcher {
     }
 
     private function renderPage(string $html): void {
-        
-        $authLinks = '';
+        $nav = '';
+
         if (isset($_SESSION['user'])) {
             $email = $_SESSION['user']['email'];
-            $authLinks = "<span>Connecté: $email</span> | <a href='?action=signout'>Déconnexion</a>";
-        } else {
-            $authLinks = "<a href='?action=add-user'>Inscription</a> | <a href='?action=signin'>Connexion</a>";
-        }
+            $username = explode('@', $email)[0];
 
+            $nav = <<<HTML
+                <link rel="stylesheet" href="styles.css">
+                <a href="?action=default">Accueil</a> |
+                <a href="?action=playlist">Voir Playlist</a> |
+                <a href="?action=add-playlist">Créer Playlist</a> |
+                <a href="?action=add-track">Ajouter Track</a> |
+                <span style="margin-left:20px;">Connecté en tant que <strong>$username</strong></span> |
+                <a href="?action=logout">Déconnexion</a>
+            HTML;
+        } else {
+            $nav = <<<HTML
+                <link rel="stylesheet" href="styles.css">
+                <a href="?action=default">Accueil</a> |
+                <a href="?action=playlist">Voir Playlist</a> |
+                <a href="?action=add-playlist">Créer Playlist</a> |
+                <a href="?action=add-track">Ajouter Track</a> |
+                <a href="?action=add-user">Inscription</a> |
+                <a href="?action=signin">Connexion</a>
+            HTML;
+        }
 
         echo <<<HTML
         <!DOCTYPE html>
@@ -73,22 +87,14 @@ class Dispatcher {
             <title>Deefy App</title>
         </head>
         <body>
-            <header style="display:flex; justify-content:space-between; align-items:center;">
-                <h1>DeefyApp</h1>
-                <nav>
-                    <a href="?action=default">Accueil</a> |
-                    <a href="?action=my-playlists">Mes Playlists</a> |
-                    <a href="?action=add-playlist">Créer Playlist</a> |
-                    <a href="?action=add-track">Ajouter Track</a>
-                </nav>
-                <div style="text-align:right;">
-                    $authLinks
-                </div>
-            </header>
+            <h1>DeefyApp</h1>
+            <nav>$nav</nav>
             <hr>
             $html
         </body>
         </html>
         HTML;
     }
+
 }
+

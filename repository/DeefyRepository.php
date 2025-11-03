@@ -50,13 +50,11 @@ class DeefyRepository {
         ];
     }
 
-    public function findUserByEmail(string $email) : array | false {
-        $query = "SELECT id, email, passwd FROM User WHERE email = ?"; 
+    public function findUserByEmail(string $email): array|false {
+        $query = "SELECT id, email, passwd, role FROM User WHERE email = ?";
         $stmt = $this->db->prepare($query);
         $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $user;
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     public function findPlaylistsForUser(int $userId): array {
@@ -76,63 +74,100 @@ class DeefyRepository {
         return $playlists;
     }
 
-    public function findPlaylistById(int $playlistId): Playlist {
-        $queryPl = "SELECT id, nom FROM playlist WHERE id = ?";
-        $stmtPl = $this->db->prepare($queryPl);
-        $stmtPl->execute([$playlistId]);
-        $plData = $stmtPl->fetch(PDO::FETCH_ASSOC);
 
-        if ($plData === false) {
-            throw new \Exception("Playlist non trouvée");
+
+    public function findAllPlaylistsByUser(int $user_id): array {
+        $query = "SELECT p.id, p.nom 
+                FROM playlist p
+                JOIN user2playlist u2p ON u2p.id_pl = p.id
+                WHERE u2p.id_user = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$user_id]);
+
+        $playlists = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $playlist = new \iutnc\deefy\classes\Playlist($row['nom']);
+            $playlist->setId((int)$row['id']);
+            $playlists[] = $playlist;
         }
-        
-        $playlist = new Playlist($plData['nom']);
-        $playlist->setId((int)$plData['id']);
-
-        $queryTr = "SELECT t.* FROM track t 
-                    JOIN playlist2track p2t ON t.id = p2t.id_track 
-                    WHERE p2t.id_pl = ? 
-                    ORDER BY p2t.no_piste_dans_liste ASC";
-        
-        $stmtTr = $this->db->prepare($queryTr);
-        $stmtTr->execute([$playlistId]);
-
-        while ($trackData = $stmtTr->fetch(PDO::FETCH_ASSOC)) {
-            $track = new PodcastTrack($trackData['titre'], $trackData['filename'], $trackData['artiste_album'] ?? $trackData['auteur_podcast'] ?? 'Inconnu');
-            $track->setId((int)$trackData['id']);
-            $track->setDuration((int)$trackData['duree']);
-            
-            $playlist->addTrack($track);
-        }
-        return $playlist;
+        return $playlists;
     }
 
 
-    public function savePlaylist(Playlist $playlist, int $userId): bool {
-        $queryPl = "INSERT INTO playlist (nom) VALUES (?)";
-        $stmtPl = $this->db->prepare($queryPl);
-        $stmtPl->bindValue(1, $playlist->__get('name'));
-        $result = $stmtPl->execute();
-        
-        $lastId = $this->db->lastInsertId();
-        $playlist->setId((int)$lastId); 
-        
-        $queryU2P = "INSERT INTO user2playlist (id_user, id_pl) VALUES (?, ?)";
-        $stmtU2P = $this->db->prepare($queryU2P);
-        $stmtU2P->bindValue(1, $userId);
-        $stmtU2P->bindValue(2, $lastId);
-        $stmtU2P->execute();
-        
-        return $result;
+
+    public function findTracksByPlaylist(int $playlist_id): array {
+        $query = "
+            SELECT t.id, t.titre, t.genre, t.duree, t.filename, 
+                t.type, t.artiste_album, t.titre_album, 
+                t.annee_album, t.numero_album, 
+                t.auteur_podcast, t.date_posdcast
+            FROM track t
+            INNER JOIN playlist2track p2t ON t.id = p2t.id_track
+            WHERE p2t.id_pl = ?
+            ORDER BY p2t.no_piste_dans_liste
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$playlist_id]);
+
+        $tracks = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            // On choisit la bonne classe selon le type de track
+            if ($row['type'] === 'P') {
+                $track = new \iutnc\deefy\classes\PodcastTrack(
+                    $row['titre'],
+                    $row['filename'],
+                    $row['auteur_podcast']
+                );
+            } else {
+                $track = new \iutnc\deefy\classes\AudioTrack(
+                    $row['titre'],
+                    $row['filename']
+                );
+                // ✅ on évite le TypeError ici
+                $track->setArtist($row['artiste_album'] ?? '');
+                $track->setDuration((int)$row['duree']);
+            }
+
+            $track->setId((int)$row['id']);
+            $tracks[] = $track;
+        }
+
+        return $tracks;
     }
+
+
+    public function savePlaylist(Playlist $playlist, int $user_id): bool {
+        try {
+
+            $query = "INSERT INTO playlist (nom) VALUES (?)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(1, $playlist->__get('name'));
+            $stmt->execute();
+
+            $playlist_id = (int) $this->db->lastInsertId();
+
+            $linkQuery = "INSERT INTO user2playlist (id_user, id_pl) VALUES (?, ?)";
+            $stmt2 = $this->db->prepare($linkQuery);
+            $stmt2->execute([$user_id, $playlist_id]);
+
+            return true;
+
+        } catch (\PDOException $e) {
+            error_log("Erreur lors de la sauvegarde de la playlist : " . $e->getMessage());
+            return false;
+        }
+    }
+
 
     public function saveTrack(AudioTrack $track): bool {
         $query = "INSERT INTO track (titre, artiste_album, duree, filename) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($query);
         
         $stmt->bindValue(1, $track->__get('title'));
-        $stmt->bindValue(2, $track->__get('artist'));
-        $stmt->bindValue(3, $track->__get('duration'));
+        $stmt->bindValue(2, $track->__get('artist') ?? ''); // artiste_album
+        $stmt->bindValue(3, $track->getDuration());        // utilise le getter public
+        //echo "<script>console.log('Message PHP : " . $track->getDuration() . "');</script>";
         $stmt->bindValue(4, $track->__get('fileName'));
         
         $result = $stmt->execute();
@@ -142,6 +177,7 @@ class DeefyRepository {
         
         return $result;
     }
+
 
     public function addTrackToPlaylist(int $id_playlist, int $id_track): bool {
         $query = "INSERT INTO playlist2track (id_pl, id_track, no_piste_dans_liste)
@@ -163,12 +199,62 @@ class DeefyRepository {
         return $stmt->execute();
     }
 
-    public function isPlaylistOwner(int $playlistId, int $userId): bool {
-        $query = "SELECT COUNT(*) FROM user2playlist WHERE id_pl = ? AND id_user = ?";
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$playlistId, $userId]);
-        $count = $stmt->fetchColumn();
-        
-        return $count > 0;
+    public function getLastInsertId(): int {
+        return (int)$this->db->lastInsertId();
+    }
+
+
+
+    public function initializeAudioTables(): void {
+        $queries = [
+
+            "CREATE TABLE IF NOT EXISTS audio_file (
+                id_audio INT PRIMARY KEY AUTO_INCREMENT,
+                filename VARCHAR(255) NOT NULL,
+                data LONGBLOB NOT NULL,
+                mime_type VARCHAR(50) DEFAULT 'audio/mpeg'
+            )",
+
+            "CREATE TABLE IF NOT EXISTS track_audio (
+                id_track INT NOT NULL,
+                id_audio INT NOT NULL,
+                PRIMARY KEY (id_track, id_audio),
+                FOREIGN KEY (id_track) REFERENCES track(id) ON DELETE CASCADE,
+                FOREIGN KEY (id_audio) REFERENCES audio_file(id_audio) ON DELETE CASCADE
+            )"
+        ];
+
+        foreach ($queries as $sql) {
+            $this->db->exec($sql);
+        }
+    }
+
+    public function saveAudioFile(string $filename, string $mime, string $data): int {
+        $stmt = $this->db->prepare("INSERT INTO audio_file (filename, mime_type, data) VALUES (?, ?, ?)");
+        $stmt->bindParam(1, $filename);
+        $stmt->bindParam(2, $mime);
+        $stmt->bindParam(3, $data, \PDO::PARAM_LOB);
+        $stmt->execute();
+        return (int)$this->db->lastInsertId();
+    }
+
+    public function linkTrackToAudio(int $trackId, int $audioId): bool {
+        $stmt = $this->db->prepare("INSERT INTO track_audio (id_track, id_audio) VALUES (?, ?)");
+        return $stmt->execute([$trackId, $audioId]);
+    }
+
+    public function getAudioFileById(int $id_audio): ?array {
+        $stmt = $this->db->prepare("SELECT filename, mime_type, data FROM audio_file WHERE id_audio = ?");
+        $stmt->execute([$id_audio]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+
+    public function findAudioIdByTrack(int $id_track): ?int {
+        $stmt = $this->db->prepare("SELECT id_audio FROM track_audio WHERE id_track = ?");
+        $stmt->execute([$id_track]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ? (int)$row['id_audio'] : null;
     }
 }

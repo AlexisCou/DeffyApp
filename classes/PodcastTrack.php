@@ -17,10 +17,10 @@ class PodcastTrack extends AudioTrack
         return $this->auteur;
     }
 
-    try {
-        return parent::__get($name);
-    } catch (\Exception $e) {
-        throw new \Exception("invalid property : $name");
-    }
+        try {
+            return parent::__get($name);
+        } catch (\Exception $e) {
+            throw new \Exception("invalid property : $name");
+        }
 }
 }

@@ -1,0 +1,143 @@
+/* === Style global === */
+body {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f7f9fb;
+    color: #333;
+}
+
+header {
+    background-color: #2b3a67;
+    color: white;
+    padding: 15px 0;
+    text-align: center;
+    font-size: 1.8em;
+    letter-spacing: 1px;
+}
+
+/* === Barre de navigation === */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e8eef7;
+    padding: 10px 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-center {
+    flex: 1;
+    text-align: center;
+}
+
+.nav-center a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #2b3a67;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-center a:hover {
+    color: #1a73e8;
+}
+
+/* === Partie droite : connexion / inscription === */
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-right a {
+    text-decoration: none;
+    color: #2b3a67;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.nav-right a:hover {
+    color: #1a73e8;
+}
+
+.username {
+    font-weight: bold;
+    color: #444;
+}
+
+.logout {
+    color: #c0392b;
+}
+
+.logout:hover {
+    color: #e74c3c;
+}
+
+/* === Contenu principal === */
+main {
+    padding: 25px 40px;
+    max-width: 900px;
+    margin: auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+/* Décalage du texte/formulaires vers la droite */
+form, p, h2, h3, ul {
+    margin-left: 20px;
+}
+
+/* === Formulaires === */
+form {
+    background-color: #f2f6fc;
+    padding: 15px 25px;
+    border-radius: 8px;
+    margin-top: 10px;
+    width: fit-content;
+}
+
+form label {
+    display: inline-block;
+    min-width: 120px;
+    margin-bottom: 6px;
+}
+
+form input, form select, form button {
+    margin-top: 5px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #bbb;
+    font-size: 1em;
+}
+
+form button {
+    background-color: #2b3a67;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form button:hover {
+    background-color: #1a73e8;
+}
+
+/* === Playlists === */
+div.playlist {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    background-color: #fafbfe;
+    transition: box-shadow 0.3s;
+}
+
+div.playlist:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+audio {
+    display: block;
+    margin-top: 5px;
+}

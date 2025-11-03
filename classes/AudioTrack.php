@@ -45,6 +45,10 @@ class AudioTrack {
         $this->duration = $d;
     }
 
+    public function getDuration(): int {
+        return $this->duration;
+    }
+
     public function setArtist(string $a): void { $this->artist = $a; }
     public function setGenre(string $g): void { $this->genre = $g; }
 
