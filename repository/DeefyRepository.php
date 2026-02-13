@@ -208,11 +208,28 @@ class DeefyRepository {
     public function initializeAudioTables(): void {
         $queries = [
 
+            "CREATE TABLE IF NOT EXISTS track (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                titre VARCHAR(255) NOT NULL,
+                genre VARCHAR(100),
+                duree INT,
+                filename VARCHAR(255),
+                type CHAR(1) DEFAULT 'A',
+                artiste_album VARCHAR(255),
+                titre_album VARCHAR(255),
+                annee_album INT,
+                numero_album INT,
+                auteur_podcast VARCHAR(255),
+                date_posdcast DATE,
+                ENGINE=InnoDB
+            )",
+
             "CREATE TABLE IF NOT EXISTS audio_file (
                 id_audio INT PRIMARY KEY AUTO_INCREMENT,
                 filename VARCHAR(255) NOT NULL,
                 data LONGBLOB NOT NULL,
-                mime_type VARCHAR(50) DEFAULT 'audio/mpeg'
+                mime_type VARCHAR(50) DEFAULT 'audio/mpeg',
+                ENGINE=InnoDB
             )",
 
             "CREATE TABLE IF NOT EXISTS track_audio (
@@ -220,7 +237,8 @@ class DeefyRepository {
                 id_audio INT NOT NULL,
                 PRIMARY KEY (id_track, id_audio),
                 FOREIGN KEY (id_track) REFERENCES track(id) ON DELETE CASCADE,
-                FOREIGN KEY (id_audio) REFERENCES audio_file(id_audio) ON DELETE CASCADE
+                FOREIGN KEY (id_audio) REFERENCES audio_file(id_audio) ON DELETE CASCADE,
+                ENGINE=InnoDB
             )"
         ];
 
